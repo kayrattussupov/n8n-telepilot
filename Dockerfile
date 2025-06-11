@@ -1,10 +1,9 @@
 FROM node:18-bullseye
 
 # Установка зависимостей
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install && apt-get install libc6 -y \
     python3-dev \
     build-essential \
-    apt install libc6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Установка n8n и TelePilot
