@@ -4,6 +4,7 @@ FROM node:18-bullseye
 RUN apt-get update && apt-get install -y \
     python3-dev \
     build-essential \
+    apt install libc6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Установка n8n и TelePilot
