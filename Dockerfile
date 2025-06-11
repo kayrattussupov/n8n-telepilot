@@ -1,41 +1,24 @@
-FROM n8nio/n8n:latest
+FROM node:18-bullseye
 
-USER root
+# Установка n8n
+RUN npm install -g n8n@latest
 
-# Обновление системы и установка всех необходимых зависимостей
+# Python уже есть в node:18-bullseye образе
+# Установка дополнительных build зависимостей
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-setuptools \
     build-essential \
-    make \
-    g++ \
-    gcc \
-    libc6-dev \
-    libffi-dev \
-    libssl-dev \
-    curl \
-    && apt-get clean \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Создание символических ссылок для Python
-RUN ln -sf /usr/bin/python3 /usr/bin/python
-RUN ln -sf /usr/bin/pip3 /usr/bin/pip
+# Установка TelePilot
+RUN npm install -g @telecopilotco/n8n-nodes-telepilot
 
-# Обновление npm до последней версии
-RUN npm install -g npm@latest
+# Создание пользователя n8n
+RUN groupadd -r n8n && useradd -r -g n8n -d /home/n8n -s /bin/bash n8n
+RUN mkdir -p /home/n8n && chown -R n8n:n8n /home/n8n
 
-# Установка node-gyp глобально
-RUN npm install -g node-gyp
-
-# Настройка npm для использования правильного Python
-RUN npm config set python /usr/bin/python3
-
-# Установка TelePilot с расширенными опциями
-RUN npm install -g @telecopilotco/n8n-nodes-telepilot --unsafe-perm --build-from-source
-
-USER node
+USER n8n
+WORKDIR /home/n8n
 
 EXPOSE 5678
 
