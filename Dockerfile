@@ -1,24 +1,26 @@
-FROM node:18-bullseye
+FROM n8nio/n8n:latest
 
-# Установка n8n
-RUN npm install -g n8n@latest
+USER root
 
-# Python уже есть в node:18-bullseye образе
-# Установка дополнительных build зависимостей
+# Установка Python и зависимостей для TelePilot
 RUN apt-get update && apt-get install -y \
-    build-essential \
+    python3 \
     python3-dev \
+    python3-pip \
+    build-essential \
+    make \
+    g++ \
+    gcc \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка TelePilot
+# Создание символических ссылок
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+# Установка TelePilot community node
 RUN npm install -g @telecopilotco/n8n-nodes-telepilot
 
-# Создание пользователя n8n
-RUN groupadd -r n8n && useradd -r -g n8n -d /home/n8n -s /bin/bash n8n
-RUN mkdir -p /home/n8n && chown -R n8n:n8n /home/n8n
-
-USER n8n
-WORKDIR /home/n8n
+USER node
 
 EXPOSE 5678
 
