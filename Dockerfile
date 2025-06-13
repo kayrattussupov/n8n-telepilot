@@ -1,23 +1,41 @@
-FROM node:18-bullseye
+# Используем Ubuntu 22.04 для совместимости с современными библиотеками
+FROM ubuntu:22.04
 
-# Установка зависимостей
-RUN apt-get update && apt-get install && apt-get install libc6 -y \
-    python3-dev \
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    python3 \
+    python3-pip \
     build-essential \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка n8n и TelePilot
-RUN npm install -g n8n@latest
-RUN npm install -g @telecopilotco/n8n-nodes-telepilot
+# Устанавливаем Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
-# Настройка пользователя
-RUN groupadd -r n8n && useradd -r -g n8n -d /home/n8n n8n
-RUN mkdir -p /home/n8n/.n8n && chown -R n8n:n8n /home/n8n
+# Создаем пользователя для n8n
+RUN useradd -m -s /bin/bash n8n
 
+# Переключаемся на пользователя n8n
 USER n8n
 WORKDIR /home/n8n
 
-ENV N8N_COMMUNITY_PACKAGES_ENABLED=true
+# Устанавливаем n8n глобально
+RUN npm install -g n8n
+
+# Создаем директории для n8n
+RUN mkdir -p /home/n8n/.n8n/nodes
+
+# Устанавливаем Telepilot
+RUN cd /home/n8n/.n8n/nodes && npm install @telepilotco/n8n-nodes-telepilot
+
+# Настраиваем переменные окружения
+ENV N8N_USER_FOLDER=/home/n8n/.n8n
+ENV N8N_BASIC_AUTH_ACTIVE=false
+ENV EXECUTIONS_PROCESS=main
 
 EXPOSE 5678
-CMD ["n8n"]
+
+CMD ["n8n", "start"]
