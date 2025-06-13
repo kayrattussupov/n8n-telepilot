@@ -1,41 +1,33 @@
-# Используем Ubuntu 22.04 для совместимости с современными библиотеками
-FROM ubuntu:22.04
+# Используем официальный образ n8n как базу
+FROM n8nio/n8n:latest
 
-# Устанавливаем системные зависимости
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    python3 \
-    python3-pip \
-    build-essential \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Переключаемся на root для установки системных пакетов
+USER root
 
-# Устанавливаем Node.js 18
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+# Обновляем системные библиотеки для совместимости с Telepilot
+RUN apk add --no-cache \
+    libc6-compat \
+    gcompat \
+    libstdc++
 
-# Создаем пользователя для n8n
-RUN useradd -m -s /bin/bash n8n
+# Создаем директории и настраиваем права
+RUN mkdir -p /home/node/.n8n/nodes && \
+    chown -R node:node /home/node/.n8n
 
-# Переключаемся на пользователя n8n
-USER n8n
-WORKDIR /home/n8n
+# Переключаемся обратно на пользователя node
+USER node
 
-# Устанавливаем n8n глобально
-RUN npm install -g n8n
-
-# Создаем директории для n8n
-RUN mkdir -p /home/n8n/.n8n/nodes
-
-# Устанавливаем Telepilot
-RUN cd /home/n8n/.n8n/nodes && npm install @telepilotco/n8n-nodes-telepilot
+# Устанавливаем Telepilot в правильную директорию
+RUN cd /home/node/.n8n/nodes && \
+    npm install @telepilotco/n8n-nodes-telepilot --no-optional --production
 
 # Настраиваем переменные окружения
-ENV N8N_USER_FOLDER=/home/n8n/.n8n
+ENV N8N_USER_FOLDER=/home/node/.n8n
 ENV N8N_BASIC_AUTH_ACTIVE=false
 ENV EXECUTIONS_PROCESS=main
+ENV N8N_SECURE_COOKIE=false
 
 EXPOSE 5678
 
-CMD ["n8n", "start"]
+# Используем исходную точку входа n8n
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
