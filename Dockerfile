@@ -1,5 +1,5 @@
 # Используем официальный образ n8n как базу
-FROM n8n/n8n:1.100.1
+FROM n8n/n8n:1.101.0
 
 # Переключаемся на root для установки системных пакетов
 USER root
@@ -26,7 +26,7 @@ ENV N8N_USER_FOLDER=/home/node/.n8n
 ENV N8N_BASIC_AUTH_ACTIVE=false
 ENV EXECUTIONS_PROCESS=main
 ENV N8N_SECURE_COOKIE=false
-
+ENV N8N_VERSION=1.101.0
 
 EXPOSE 5678
 
